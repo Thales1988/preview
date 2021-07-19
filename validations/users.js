@@ -1,6 +1,7 @@
 import { body } from 'express-validator'
 import { userService } from '../services/index.js'
 
+let serviceUser = new userService()
 
 const validationCreateUser = [
   body('name')
@@ -22,7 +23,7 @@ const validationCreateUser = [
       return value.replaceAll('.', '').replaceAll('-', '')
     })
     .custom(async (value) => {
-      let exist = await userService.verifyIfUserExist(value)
+      let exist = await serviceUser.verifyIfUserIsActive(value)
       if (exist) {
         throw new Error('CPF ja existe')
       }

@@ -1,23 +1,14 @@
 import { query } from 'express-validator'
 import { usersRepository } from '../models/index.js'
 import { generateToken } from '../helpers/token.js'
+import service from './service.js'
 
-export default class userService {
-  constructor() { }
+export default class userService extends service {
+  constructor() { super(usersRepository) }
 
-  static async create(obj) {
-    const user = usersRepository(obj)
-    await user.save()
-    return user
-  }
-
-  static async getById(id) {
-    return usersRepository.findById(id)
-  }
-
-  static async get(filter) {
+  async get(filter) {
     let { name, ...rest } = filter
-    let query = usersRepository
+    let query = usersRepository.find().populate('posts')
 
     if (name) {
       query = query.find({
@@ -28,16 +19,8 @@ export default class userService {
     return query
   }
 
-  static async update(filter, update) {
-    return usersRepository.findOneAndUpdate(filter, update, { new: true })
-  }
-
-  static async delete(filter) {
-    return usersRepository.findOneAndUpdate(filter, { active: false })
-  }
-
-  static async signin({ email, password }) {
-    let user = await usersRepository.verifyUser(email, password)
+  async signin({ email, password }) {
+    let user = await this.repository.verifyUser(email, password)
     if (user) {
       return generateToken(user)
     } else {
@@ -45,8 +28,15 @@ export default class userService {
     }
   }
 
-  static async verifyIfUserExist(cpf) {
-    let user = await usersRepository.findOne({ cpf })
+  async verifyIfUserIsActive(cpf) {
+    let user = await this.repository.findOne({ cpf, active: true })
     return user ? true : false
+  }
+
+  async addPost(userId, postId) {
+    await this.repository.findOneAndUpdate(
+      { _id: userId },
+      { $push: { posts: postId } }
+    )
   }
 }

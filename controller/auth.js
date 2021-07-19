@@ -5,10 +5,14 @@ import validator from '../middleware/validate.js'
 
 const router = express.Router()
 
+const prefix = 'auth'
+
+let service = new userService()
+
 router.post('/signin', async (req, res) => {
   let { body } = req
   try {
-    let token = await userService.signin(body)
+    let token = await service.signin(body)
     res.status(201).json({ token: token })
   }
   catch ({ message }) {
@@ -16,4 +20,4 @@ router.post('/signin', async (req, res) => {
   }
 })
 
-export default router
+export default { controller: router, prefix }
